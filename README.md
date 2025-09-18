@@ -1,0 +1,1 @@
+# MSME ESG Compliance Portal (Goa, India) — v0.2\n\nQuickstart:\n\n```bash\nnpm install\ncp .env.example .env\nnpx prisma migrate dev --name init\nnpm run seed\nnpm run dev\n```\n\nOpen http://localhost:3000\n\nPages: /, /schemes, /tools, /wizard, /legal, /graph, /goa, /admin\n

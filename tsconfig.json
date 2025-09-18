@@ -1,0 +1,95 @@
+{
+  "compilerOptions": {
+    // Language and Environment
+    "target": "ES2022",
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    
+    // Module Resolution
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "incremental": true,
+    
+    // Path Mapping
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./*"],
+      "@/components/*": ["./components/*"],
+      "@/lib/*": ["./lib/*"],
+      "@/types/*": ["./types/*"],
+      "@/app/*": ["./app/*"],
+      "@/hooks/*": ["./hooks/*"],
+      "@/utils/*": ["./lib/utils/*"],
+      "@/api/*": ["./app/api/*"],
+      "@/prisma/*": ["./prisma/*"]
+    },
+    
+    // Type Checking
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "exactOptionalPropertyTypes": false,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": false,
+    "noImplicitOverride": true,
+    "allowUnusedLabels": false,
+    "allowUnreachableCode": false,
+    
+    // Advanced
+    "forceConsistentCasingInFileNames": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    
+    // Next.js specific
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    
+    // Import/Export
+    "verbatimModuleSyntax": false,
+    
+    // Debugging
+    "sourceMap": true,
+    "declarationMap": false,
+    
+    // Performance
+    "assumeChangesOnlyAffectDirectDependencies": true
+  },
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    "types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    ".next",
+    "out",
+    "dist",
+    "build",
+    "coverage",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.spec.ts",
+    "**/*.spec.tsx"
+  ],
+  "ts-node": {
+    "esm": true,
+    "experimentalSpecifierResolution": "node"
+  }
+}
