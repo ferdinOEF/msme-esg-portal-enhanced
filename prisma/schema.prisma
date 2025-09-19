@@ -14,22 +14,13 @@ model User {
   updatedAt DateTime @updatedAt
 
   email     String   @unique
-  name      String
-  role      UserRole @default(CONSULTANT)
-  isActive  Boolean  @default(true)
-  
-  // Profile fields
-  organization String?
-  phone        String?
-  expertise    String[] // ESG areas of expertise
-  
-  // Relations
-  favorites        UserFavorite[]
-  applications     UserApplication[]
-  auditLogs        AuditLog[]
-  createdSchemes   Scheme[]       @relation("CreatedBy")
-  createdPlans     ESGPlan[]      @relation("PlanCreatedBy")
-  assignedPlans    ESGPlan[]      @relation("PlanAssignedTo")
+  name      String?
+  password  String
+  role      UserRole @default(VIEWER)
+
+  companies Company[] @relation("UserCompanies")
+  tokens    Session[]
+  auditLogs AuditLog[]
 
   @@map("users")
 }
@@ -39,24 +30,16 @@ model Company {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  name         String
-  udyamNumber  String?  @unique
-  sector       String
-  size         CompanySize
-  state        String
-  city         String?
-  address      String?
-  turnoverCr   Decimal?
-  employees    Int?
-  
-  // Contact info
-  contactPerson String?
-  contactEmail  String?
-  contactPhone  String?
-  
+  name        String
+  description String?
+  website     String?
+  address     String?
+  contact     String?
+  entityId    String?
+
   // Compliance status
   complianceStatus Json? // Store current compliance checklist
-  
+
   // Relations
   esgPlans     ESGPlan[]
   applications UserApplication[]
@@ -65,298 +48,82 @@ model Company {
 }
 
 model Scheme {
-  id        String   @id @default(cuid())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  name         String   @unique
-  shortCode    String?
-  type         SchemeType
-  authority    String
-  description  String
-  benefits     String?
-  eligibility  String?
-  documentsUrl String?
-  
-  // Enhanced categorization
-  jurisdiction String   @default("Central") // Central, State, Global
-  sector       String[] // Multiple sectors
-  companySize  CompanySize[] // Applicable company sizes
-  
-  // ESG categorization
-  pillarE      Boolean  @default(false)
-  pillarS      Boolean  @default(false)
-  pillarG      Boolean  @default(false)
-  
-  // Application details
-  applicationDeadline DateTime?
-  processingDays      Int?
-  applicationFee      Decimal?
-  maxBenefitAmount    Decimal?
-  
-  // Status and validity
-  isActive     Boolean  @default(true)
-  validFrom    DateTime @default(now())
-  validTo      DateTime?
-  
-  // Metadata
-  priority     Int      @default(0) // For sorting/recommendations
-  popularity   Int      @default(0) // Track usage
-  
-  // Relations
-  createdBy    String?
-  creator      User?    @relation("CreatedBy", fields: [createdBy], references: [id])
-  
-  // Many-to-many relations (CORRECTED)
-  tags         SchemeTag[]
-  categories   SchemeCategory[]
-  
-  linksFrom    SchemeLink[] @relation("LinksFrom")
-  linksTo      SchemeLink[] @relation("LinksTo")
-  files        File[]
-  favorites    UserFavorite[]
-  applications UserApplication[]
-  planItems    ESGPlanItem[]
-  
-  @@index([type, jurisdiction])
-  @@index([pillarE, pillarS, pillarG])
-  @@index([isActive, validFrom, validTo])
-  @@map("schemes")
-}
-
-model SchemeCategory {
-  id   String @id @default(cuid())
-  name String @unique
-  
-  // Many-to-many relation (CORRECTED)
-  schemes Scheme[]
-  
-  @@map("scheme_categories")
-}
-
-model SchemeTag {
-  id   String @id @default(cuid())
-  name String @unique
-  
-  // Many-to-many relation (CORRECTED)
-  schemes Scheme[]
-  
-  @@map("scheme_tags")
-}
-
-model SchemeLink {
-  id        String   @id @default(cuid())
-  createdAt DateTime @default(now())
-
-  fromId    String
-  toId      String
-  relation  LinkRelation
-  notes     String?
-
-  from      Scheme  @relation("LinksFrom", fields: [fromId], references: [id], onDelete: Cascade)
-  to        Scheme  @relation("LinksTo", fields: [toId], references: [id], onDelete: Cascade)
-
-  @@unique([fromId, toId, relation])
-  @@index([fromId])
-  @@index([toId])
-  @@map("scheme_links")
-}
-
-model LegalDoc {
-  id        String   @id @default(cuid())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  title        String   @unique
-  jurisdiction String
-  sector       String?
-  locationTag  String?
-  summary      String?
-  url          String?
-  
-  // Enhanced fields
-  documentType DocumentType @default(GUIDELINE)
-  severity     Severity     @default(MEDIUM)
-  effectiveFrom DateTime?
-  lastUpdated   DateTime?
-  
-  // ESG relevance
-  pillarE      Boolean  @default(false)
-  pillarS      Boolean  @default(false)
-  pillarG      Boolean  @default(false)
-  
-  tags         String   @default("")
-  
-  @@index([jurisdiction, sector])
-  @@index([pillarE, pillarS, pillarG])
-  @@map("legal_docs")
-}
-
-model Template {
-  id        String   @id @default(cuid())
+  id        Int        @id @default(autoincrement())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   title       String   @unique
-  category    TemplateCategory
+  categoryId  Int
+  category    Category   @relation(fields: [categoryId], references: [id])
   description String?
-  contentMd   String
-  downloadUrl String?
-  
-  // Versioning
-  version     String   @default("1.0")
-  isLatest    Boolean  @default(true)
-  parentId    String?  // For version history
-  
-  tags        String   @default("")
-  
-  @@map("templates")
-}
+  published   Boolean   @default(false)
+  issuer      String?
+  url         String?
 
-model File {
-  id        String   @id @default(cuid())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  // Enhanced categorization
+  jurisdiction String   @default("Central") // Central, State, Global
+  sector       String[] // Multiple sectors
+  companySize  CompanySize[] // Applicable company sizes
 
-  // File metadata
-  filename    String
-  originalName String
-  url         String
-  mimeType    String?
-  size        Int?
-  
-  // Categorization
-  category    FileCategory @default(DOCUMENT)
-  description String?
-  
-  // Relations
-  schemeId    String?
-  scheme      Scheme?  @relation(fields: [schemeId], references: [id], onDelete: SetNull)
-  
-  // Upload tracking
-  uploadedBy  String?
-  status      FileStatus @default(ACTIVE)
-  
-  @@index([schemeId])
-  @@index([category, status])
-  @@map("files")
+  // ESG categorization
+  pillarE      Boolean  @default(false)
+  pillarS      Boolean  @default(false)
+  pillarG      Boolean  @default(false)
+
+  // Application deta
 }
 
 model ESGPlan {
-  id        String   @id @default(cuid())
+  id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  title       String
-  description String?
-  
-  // Plan details
-  companyId   String
-  company     Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  
-  createdBy   String
-  creator     User    @relation("PlanCreatedBy", fields: [createdBy], references: [id])
-  
-  assignedTo  String?
-  assignee    User?   @relation("PlanAssignedTo", fields: [assignedTo], references: [id])
-  
-  // Timeline
-  startDate   DateTime @default(now())
-  targetDate  DateTime
-  completedAt DateTime?
-  
-  // Status
-  status      PlanStatus @default(DRAFT)
-  progress    Int        @default(0) // 0-100
-  
-  // Plan items
-  items       ESGPlanItem[]
-  
-  @@index([companyId, status])
-  @@map("esg_plans")
-}
+  name      String
+  companyId String
+  company   Company  @relation(fields: [companyId], references: [id])
 
-model ESGPlanItem {
-  id        String   @id @default(cuid())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  title       String
-  description String?
-  
-  planId      String
-  plan        ESGPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
-  
-  schemeId    String?
-  scheme      Scheme? @relation(fields: [schemeId], references: [id])
-  
-  // Timeline
-  dueDate     DateTime?
-  completedAt DateTime?
-  
-  // Status
-  status      ItemStatus @default(PENDING)
-  priority    Priority   @default(MEDIUM)
-  
-  // Ordering
-  order       Int        @default(0)
-  
-  @@index([planId, status])
-  @@index([dueDate])
-  @@map("esg_plan_items")
-}
-
-model UserFavorite {
-  id        String   @id @default(cuid())
-  createdAt DateTime @default(now())
-
-  userId    String
-  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  schemeId  String
-  scheme    Scheme @relation(fields: [schemeId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, schemeId])
-  @@map("user_favorites")
+  steps     Json?
 }
 
 model UserApplication {
-  id        String   @id @default(cuid())
+  id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  userId     String
-  user       User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  schemeId   String
-  scheme     Scheme  @relation(fields: [schemeId], references: [id], onDelete: Cascade)
-  
-  companyId  String
-  company    Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  
-  status     ApplicationStatus @default(INTERESTED)
-  appliedAt  DateTime?
-  notes      String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  companyId String
+  company   Company  @relation(fields: [companyId], references: [id])
 
-  @@unique([userId, schemeId, companyId])
-  @@index([status])
-  @@map("user_applications")
+  status    ApplicationStatus @default(INTERESTED)
+  notes     String?
+}
+
+model Session {
+  id         String   @id @default(cuid())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  expiresAt  DateTime
+  token      String   @unique
 }
 
 model AuditLog {
-  id        String   @id @default(cuid())
+  id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  userId    String
-  user      User   @relation(fields: [userId], references: [id])
-  
-  action    String // CREATE, UPDATE, DELETE, VIEW
-  entity    String // SCHEME, LEGAL_DOC, etc.
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+
+  action    String
+  entity    String
   entityId  String
-  
+
   oldValues Json?
   newValues Json?
-  
+
   ipAddress String?
   userAgent String?
 
@@ -366,15 +133,19 @@ model AuditLog {
 }
 
 model Category {
-  id          Int      @id @default(autoincrement())
+  id          Int        @id @default(autoincrement())
   name        String
   description String?
-  color       String?   // ✅ new
-  icon        String?   // ✅ new
-  parentId    Int?      // ✅ new (or relation if hierarchical)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  color       String?
+  icon        String?
+  parentId    Int?
+  parent      Category?   @relation("CategoryToChildren", fields: [parentId], references: [id])
+  children    Category[]  @relation("CategoryToChildren")
+  schemes     Scheme[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
 }
+
 
 // Enums
 enum UserRole {
@@ -389,82 +160,6 @@ enum CompanySize {
   SMALL
   MEDIUM
   LARGE
-}
-
-enum SchemeType {
-  SCHEME
-  CERTIFICATION
-  FRAMEWORK
-  SUBSIDY
-  GRANT
-  LOAN
-  INCENTIVE
-}
-
-enum LinkRelation {
-  PREREQUISITE
-  SUPPORTS
-  UNLOCKS
-  CONFLICTS
-  ALTERNATIVE
-  COMPLEMENT
-}
-
-enum DocumentType {
-  REGULATION
-  GUIDELINE
-  NOTIFICATION
-  CIRCULAR
-  AMENDMENT
-  JUDGMENT
-}
-
-enum Severity {
-  LOW
-  MEDIUM
-  HIGH
-  CRITICAL
-}
-
-enum TemplateCategory {
-  CHECKLIST
-  POLICY
-  FORM
-  REPORT
-  AUDIT
-  PROCEDURE
-}
-
-enum FileCategory {
-  DOCUMENT
-  CIRCULAR
-  FAQ
-  FORM
-  CHECKLIST
-  REPORT
-  CERTIFICATE
-}
-
-enum FileStatus {
-  ACTIVE
-  ARCHIVED
-  DELETED
-}
-
-enum PlanStatus {
-  DRAFT
-  ACTIVE
-  ON_HOLD
-  COMPLETED
-  CANCELLED
-}
-
-enum ItemStatus {
-  PENDING
-  IN_PROGRESS
-  COMPLETED
-  BLOCKED
-  CANCELLED
 }
 
 enum Priority {
