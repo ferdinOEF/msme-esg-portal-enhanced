@@ -1,4 +1,3 @@
-// app/admin/page.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -102,15 +101,15 @@ export default function AdminPage() {
       });
 
       if (response.ok) {
-        setStatus('✅ Scheme saved successfully');
+        setStatus('Scheme saved successfully');
         (e.target as HTMLFormElement).reset();
         loadAdminStats();
       } else {
         const error = await response.json();
-        setStatus(`❌ Error: ${error.error || 'Failed to save scheme'}`);
+        setStatus(`Error: ${error.error || 'Failed to save scheme'}`);
       }
     } catch (error) {
-      setStatus('❌ Error saving scheme');
+      setStatus('Error saving scheme');
     } finally {
       setLoading(false);
     }
@@ -143,15 +142,15 @@ export default function AdminPage() {
       });
 
       if (response.ok) {
-        setStatus('✅ Legal document saved successfully');
+        setStatus('Legal document saved successfully');
         (e.target as HTMLFormElement).reset();
         loadAdminStats();
       } else {
         const error = await response.json();
-        setStatus(`❌ Error: ${error.error || 'Failed to save legal document'}`);
+        setStatus(`Error: ${error.error || 'Failed to save legal document'}`);
       }
     } catch (error) {
-      setStatus('❌ Error saving legal document');
+      setStatus('Error saving legal document');
     } finally {
       setLoading(false);
     }
@@ -197,7 +196,7 @@ export default function AdminPage() {
 
       {status && (
         <div className={`p-3 rounded-lg text-sm ${
-          status.includes('✅') 
+          status.includes('') 
             ? 'bg-green-50 text-green-800 border border-green-200' 
             : 'bg-red-50 text-red-800 border border-red-200'
         }`}>
@@ -713,14 +712,14 @@ function BulkImportSection({ title, endpoint, adminKey, sampleData }: BulkImport
 
       if (response.ok) {
         const result = await response.json();
-        setImportStatus(`✅ Successfully imported ${result.count} records`);
+        setImportStatus(` Successfully imported ${result.count} records`);
         setCsvData('');
       } else {
         const error = await response.json();
-        setImportStatus(`❌ Import failed: ${error.error || 'Unknown error'}`);
+        setImportStatus(` Import failed: ${error.error || 'Unknown error'}`);
       }
     } catch (error) {
-      setImportStatus('❌ Import failed: Network error');
+      setImportStatus(' Import failed: Network error');
     } finally {
       setIsImporting(false);
     }
@@ -755,7 +754,7 @@ function BulkImportSection({ title, endpoint, adminKey, sampleData }: BulkImport
       
       {importStatus && (
         <div className={`mt-3 p-3 rounded-lg text-sm ${
-          importStatus.includes('✅') 
+          importStatus.includes('') 
             ? 'bg-green-50 text-green-800 border border-green-200'
             : 'bg-red-50 text-red-800 border border-red-200'
         }`}>
